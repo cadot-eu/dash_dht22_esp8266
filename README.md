@@ -14,6 +14,9 @@ const char* passwordap = "";  // Password
 
 const char* ssid = "";            // SSID
 const char* password = "";  // Password
+
 ![image](https://github.com/cadot-eu/dash_dht22_esp8266/assets/97225403/2eff6c63-d1f0-4386-80a3-0ad0cfc770f3)
 
+![ESP8266-Complete-Circuit](https://github.com/cadot-eu/dash_dht22_esp8266/assets/97225403/7a50cca8-13ce-49c3-8bf4-1e1b11403c16)
 
+![wemos-goouuu-mini](https://github.com/cadot-eu/dash_dht22_esp8266/assets/97225403/8d656175-b602-46e9-94b1-330213f2bdb4)
