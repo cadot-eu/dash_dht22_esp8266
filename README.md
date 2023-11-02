@@ -7,3 +7,10 @@ This little project use:
 - ArduinoJson - v6.17.0
 
 interface web and ap server
+
+create a file arduino_secrets.h with
+const char* ssidap = "";              // SSID
+const char* passwordap = "";  // Password
+
+const char* ssid = "";            // SSID
+const char* password = "";  // Password
