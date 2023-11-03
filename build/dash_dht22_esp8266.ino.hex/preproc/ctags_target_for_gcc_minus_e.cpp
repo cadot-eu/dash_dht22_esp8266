@@ -1,0 +1,140 @@
+# 1 "/home/michael/git/arduino/dash_dht22_esp8266/dash_dht22_esp8266.ino"
+# 2 "/home/michael/git/arduino/dash_dht22_esp8266/dash_dht22_esp8266.ino" 2
+
+/* ESP8266 Dependencies */
+# 5 "/home/michael/git/arduino/dash_dht22_esp8266/dash_dht22_esp8266.ino" 2
+# 6 "/home/michael/git/arduino/dash_dht22_esp8266/dash_dht22_esp8266.ino" 2
+# 7 "/home/michael/git/arduino/dash_dht22_esp8266/dash_dht22_esp8266.ino" 2
+
+
+
+
+
+
+# 14 "/home/michael/git/arduino/dash_dht22_esp8266/dash_dht22_esp8266.ino" 2
+
+# 16 "/home/michael/git/arduino/dash_dht22_esp8266/dash_dht22_esp8266.ino" 2
+
+// #define DHTTYPE    DHT11     // DHT 11
+
+// #define DHTTYPE    DHT21     // DHT 21 (AM2301)
+DHT dht(4 /* Digital pin connected to the DHT sensor*/, DHT22 /* DHT 22 (AM2302)*/);
+float Temperature;
+float Humidity;
+
+/* Your SoftAP WiFi Credentials */
+# 26 "/home/michael/git/arduino/dash_dht22_esp8266/dash_dht22_esp8266.ino" 2
+const char *ssidap = "AP"; /* SSID*/; // SSID
+const char *passwordap = "ababababab"; /* Password*/; // Password
+
+const char *ssid = "wifi"; /* SSID*/; // SSID
+const char *password = "ababababab"; /* Password*/; // Password
+
+/* Start Webserver */
+AsyncWebServer server(80);
+
+/* Attach ESP-DASH to AsyncWebServer */
+ESPDash dashboard(&server);
+
+/*
+  Dashboard Cards
+  Format - (Dashboard Instance, Card Type, Card Name, Card Symbol(optional) )
+*/
+Card temperature(&dashboard, TEMPERATURE_CARD, "Temperature", "°C");
+Card humidity(&dashboard, HUMIDITY_CARD, "Humidity", "%");
+Card temps(&dashboard, GENERIC_CARD, "temps avant mesure", "s");
+
+Chart charttemp(&dashboard, LINE_CHART, "Tempétrature sur 96h");
+Chart charthumidity(&dashboard, LINE_CHART, "Humidité sur 96h");
+
+String XAxis[96];
+float YAxisT[96];
+float YAxisH[96];
+int pointer = 0;
+int boucle = 6 * 60;
+void setup()
+{
+  Serial.begin(115200);
+  charttemp.setSize({.xs = 12, .sm = 12, .md = 12, .lg = 12, .xl = 12, .xxl = 12});
+  charthumidity.setSize({.xs = 12, .sm = 12, .md = 12, .lg = 12, .xl = 12, .xxl = 12});
+  // on initialise les tableaux
+  for (int i = 0; i < (96 - 1); i++)
+  {
+    XAxis[i] = i;
+  }
+
+  charttemp.updateX(XAxis, 96);
+  charthumidity.updateX(XAxis, 96);
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);
+
+  pinMode(4 /* Digital pin connected to the DHT sensor*/, 0x00);
+
+  dht.begin();
+
+  /* Start AsyncWebServer */
+  server.begin();
+  /* Connect WiFi */
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);
+  if (WiFi.waitForConnectResult() != WL_CONNECTED)
+  {
+    Serial.printf("WiFi Failed!\n");
+    return;
+  }
+  Serial.print("IP Address: ");
+  Serial.println(WiFi.localIP());
+}
+
+void loop()
+{
+  temps.update(int((6 * 600) - (boucle * 10)));
+  if (WiFi.waitForConnectResult() != WL_CONNECTED)
+  {
+    /* Start Access Point */
+    WiFi.mode(WIFI_AP);
+    WiFi.softAPConfig(IPAddress(192, 168, 0, 1), IPAddress(192, 168, 0, 1), IPAddress(255, 255, 255, 0));
+    WiFi.softAP(ssidap, passwordap);
+    Serial.print("IP Address: ");
+    Serial.println(WiFi.softAPIP());
+  }
+  Temperature = dht.readTemperature(); // Gets the values of the temperature
+  Humidity = dht.readHumidity(); // Gets the values of the humidity
+  /* Update Card Values */
+  temperature.update(Temperature);
+  humidity.update(Humidity);
+  if (boucle >= (6 * 60)) // toutes les heures
+  {
+    boucle = 0;
+    if (pointer > (96 - 1))
+    { // si on dépasse la limite du tableau on effectue un décalage
+      for (int i = 0; i < (96 - 1); i++)
+      {
+        YAxisT[i] = YAxisT[i + 1];
+        YAxisH[i] = YAxisH[i + 1];
+      }
+      YAxisT[96 - 1] = Temperature;
+      YAxisH[96 - 1] = Humidity;
+    }
+    else
+    {
+      YAxisT[pointer] = Temperature;
+      YAxisH[pointer] = Humidity;
+    }
+    charttemp.updateY(YAxisT, 96);
+    charthumidity.updateY(YAxisH, 96);
+    pointer++;
+  }
+  else
+  {
+    boucle++;
+  }
+
+  dashboard.sendUpdates();
+
+  /*
+    Delay is just for demonstration purposes in this example,
+    Replace this code with 'millis interval' in your final project.
+  */
+  delay(10000);
+}
