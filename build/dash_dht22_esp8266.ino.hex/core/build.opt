@@ -1,2 +1,0 @@
--include "/home/michael/.arduino15/packages/esp8266/hardware/esp8266/3.1.2/cores/esp8266/CommonHFile.h"
--include "/home/michael/git/arduino/dash_dht22_esp8266/build/dash_dht22_esp8266.ino.hex/core/dash_dht22_esp8266.ino.globals.h"
